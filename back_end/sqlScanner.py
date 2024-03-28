@@ -9,8 +9,6 @@ print('''\033[92m
  |___/\__\_\____|___| |___/\__\__,_|_||_|_||_\___|_|
 	
 ''')
-
-x``
 def slowprint(s):
     for c in s + '\n':
         sys.stdout.write(c)
