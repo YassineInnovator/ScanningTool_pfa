@@ -1,35 +1,40 @@
 import scapy.all as scapy
 import argparse
 
-
-#Network Scanner in Python : 
-def get_arguments():
+def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--target", dest="target", help="Sepcify target ip or ip range")
+    parser.add_argument('-t', '--target', dest='target', help='Target IP Address/Adresses')
     options = parser.parse_args()
+
+    #Check for errors i.e if the user does not specify the target IP Address
+    #Quit the program if the argument is missing
+    #While quitting also display an error message
     if not options.target:
         #Code to handle if interface is not specified
         parser.error("[-] Please specify an IP Address or Addresses, use --help for more info.")
     return options
-
+  
 def scan(ip):
-    arp_request = scapy.ARP(pdst=ip)
-    broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
-    arp_broadcast = broadcast/arp_request
-    answered_list = scapy.srp(arp_broadcast, timeout=1, verbose=False)[0]
-    client_list = []
+    arp_req_frame = scapy.ARP(pdst = ip)
 
-    for element in answered_list:
-        client_dict = {"ip": element[1].psrc, "mac": element[1].hwsrc}
-        client_list.append(client_dict)
+    broadcast_ether_frame = scapy.Ether(dst = "ff:ff:ff:ff:ff:ff")
+    
+    broadcast_ether_arp_req_frame = broadcast_ether_frame / arp_req_frame
 
-    return client_list
+    answered_list = scapy.srp(broadcast_ether_arp_req_frame, timeout = 1, verbose = False)[0]
+    result = []
+    for i in range(0,len(answered_list)):
+        client_dict = {"ip" : answered_list[i][1].psrc, "mac" : answered_list[i][1].hwsrc}
+        result.append(client_dict)
 
-def print_result(scan_list):
-    print("IP\t\t\tMAC\n----------------------------------------")
-    for client in scan_list:
-        print(client["ip"] + "\t\t" + client["mac"])
+    return result
+  
+def display_result(result):
+    print("-----------------------------------\nIP Address\tMAC Address\n-----------------------------------")
+    for i in result:
+        print("{}\t{}".format(i["ip"], i["mac"]))
+  
 
-
-ssc = scan('192.168.1.1/24')
-print_result(ssc)
+options = get_args()
+scanned_output = scan(options.target)
+display_result(scanned_output)
